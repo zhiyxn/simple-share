@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.simpleshare.infra.mapper.InfraFileMapper">
+
+    <resultMap type="com.simpleshare.infra.domain.InfraFile" id="InfraFileResult">
+        <result property="id" column="id"/>
+        <result property="configId" column="config_id"/>
+        <result property="name" column="name"/>
+        <result property="path" column="path"/>
+        <result property="url" column="url"/>
+        <result property="type" column="type"/>
+        <result property="size" column="size"/>
+        <result property="createBy" column="create_by"/>
+        <result property="createTime" column="create_time"/>
+        <result property="updateBy" column="update_by"/>
+        <result property="updateTime" column="update_time"/>
+        <result property="deleted" column="deleted"/>
+    </resultMap>
+
+    <sql id="selectInfraFileVo">
+        select id, config_id, name, path, url, type, size, create_by, create_time, update_by, update_time, deleted
+        from infra_file
+    </sql>
+
+    <select id="selectInfraFileList" parameterType="com.simpleshare.infra.domain.InfraFile" resultMap="InfraFileResult">
+        <include refid="selectInfraFileVo"/>
+        <where>
+            deleted = 0
+            <if test="configId != null">and config_id = #{configId}</if>
+            <if test="name != null and name != ''">and name like concat('%', #{name}, '%')</if>
+            <if test="type != null and type != ''">and type = #{type}</if>
+            <if test="path != null and path != ''">and path like concat('%', #{path}, '%')</if>
+        </where>
+        order by create_time desc
+    </select>
+
+    <delete id="deleteByPath" parameterType="String">
+        update infra_file set deleted = 1 where path = #{path} and deleted = 0
+    </delete>
+
+    <select id="selectByConfigId" parameterType="Long" resultMap="InfraFileResult">
+        <include refid="selectInfraFileVo"/>
+        where config_id = #{configId} and deleted = 0
+        order by create_time desc
+    </select>
+
+    <select id="sumFileSizeByConfigId" parameterType="Long" resultType="Long">
+        select COALESCE(sum(size), 0) from infra_file
+        where config_id = #{configId} and deleted = 0
+    </select>
+
+</mapper>

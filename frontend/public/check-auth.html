@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>检查认证状态</title>
+</head>
+<body>
+    <h1>认证状态检查</h1>
+    <div id="auth-info"></div>
+    
+    <script>
+        const authInfo = document.getElementById('auth-info');
+        
+        const token = localStorage.getItem('token');
+        const userInfo = localStorage.getItem('userInfo');
+        const refreshToken = localStorage.getItem('refreshToken');
+        
+        authInfo.innerHTML = `
+            <h2>LocalStorage 内容:</h2>
+            <p><strong>Token:</strong> ${token || '无'}</p>
+            <p><strong>User Info:</strong> ${userInfo || '无'}</p>
+            <p><strong>Refresh Token:</strong> ${refreshToken || '无'}</p>
+            
+            <h2>解析后的用户信息:</h2>
+            <pre>${userInfo ? JSON.stringify(JSON.parse(userInfo), null, 2) : '无用户信息'}</pre>
+        `;
+    </script>
+</body>
+</html>

@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.simpleshare.system.mapper.AiTechCardClickMapper">
+
+    <resultMap id="AiTechCardClickResult" type="com.simpleshare.system.domain.AiTechCardClick">
+        <id column="id" property="id"/>
+        <result column="tenant_id" property="tenantId"/>
+        <result column="card_key" property="cardKey"/>
+        <result column="card_title" property="cardTitle"/>
+        <result column="card_path" property="cardPath"/>
+        <result column="card_category" property="cardCategory"/>
+        <result column="click_count" property="clickCount"/>
+        <result column="last_click_time" property="lastClickTime"/>
+        <result column="create_time" property="createTime"/>
+        <result column="update_time" property="updateTime"/>
+        <result column="create_by" property="createBy"/>
+        <result column="update_by" property="updateBy"/>
+        <result column="remark" property="remark"/>
+    </resultMap>
+
+    <sql id="Base_Column_List">
+        id, tenant_id, card_key, card_title, card_path, card_category,
+        click_count, last_click_time, create_time, update_time, create_by, update_by, remark
+    </sql>
+
+    <select id="selectByTenantAndKey" resultMap="AiTechCardClickResult">
+        SELECT <include refid="Base_Column_List"/>
+        FROM aitech_card_click
+        WHERE tenant_id = #{tenantId}
+          AND card_key = #{cardKey}
+        LIMIT 1
+    </select>
+
+    <select id="selectByTenant" resultMap="AiTechCardClickResult">
+        SELECT <include refid="Base_Column_List"/>
+        FROM aitech_card_click
+        WHERE tenant_id = #{tenantId}
+        ORDER BY click_count DESC, IFNULL(last_click_time, create_time) DESC
+    </select>
+
+    <select id="selectTopByTenant" resultMap="AiTechCardClickResult">
+        SELECT <include refid="Base_Column_List"/>
+        FROM aitech_card_click
+        WHERE tenant_id = #{tenantId}
+        ORDER BY click_count DESC, IFNULL(last_click_time, create_time) DESC
+        LIMIT #{limit}
+    </select>
+
+    <update id="incrementClickCount">
+        UPDATE aitech_card_click
+        SET click_count = click_count + 1,
+            card_title = #{cardTitle},
+            card_path = #{cardPath},
+            card_category = #{cardCategory},
+            last_click_time = #{lastClickTime}
+        WHERE id = #{id}
+    </update>
+
+</mapper>

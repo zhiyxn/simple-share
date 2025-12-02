@@ -1,0 +1,211 @@
+# ====================================================================
+# SimpleShare 开发环境配置文件
+# 此文件包含开发环境特有的配置，会覆盖 application.yml 中的相同配置项
+# 开发环境特点：详细日志、本地数据库、调试功能开启
+# ====================================================================
+
+# 项目配置 - 开发环境
+simpleshare:
+  # 文件上传存储路径（开发环境使用本地路径）
+  # 可通过环境变量 SIMPLESHARE_PROFILE 覆盖
+  profile: ${SIMPLESHARE_PROFILE:D:/simpleshare/dev/upload}
+
+# ====================================================================
+# 开发环境日志配置
+# 开发环境使用更详细的日志级别，便于调试和问题排查
+# ====================================================================
+logging:
+  level:
+    # 根日志级别（开发环境默认debug，便于查看详细信息）
+    root: ${DEV_LOGGING_LEVEL_ROOT:${LOGGING_LEVEL_ROOT:debug}}
+    # 项目包日志级别（开发环境使用debug级别，显示详细业务逻辑）
+    com.simpleshare: ${DEV_LOGGING_LEVEL_APP:${LOGGING_LEVEL_APP:debug}}
+    # Spring框架日志级别（开发环境使用info级别，显示重要信息）
+    org.springframework: ${DEV_LOGGING_LEVEL_SPRING:${LOGGING_LEVEL_SPRING:info}}
+    # Spring Web日志级别（开发环境使用debug级别，显示HTTP请求详情）
+    org.springframework.web: ${DEV_LOGGING_LEVEL_SPRING_WEB:${LOGGING_LEVEL_SPRING_WEB:debug}}
+    # MyBatis日志级别（开发环境使用debug级别，显示SQL执行详情）
+    org.mybatis: ${DEV_LOGGING_LEVEL_MYBATIS:${LOGGING_LEVEL_MYBATIS:debug}}
+
+# ====================================================================
+# Spring框架配置 - 开发环境
+# ====================================================================
+spring:
+  # ============ 数据源配置 ============
+  datasource:
+    # 数据源类型（使用阿里巴巴Druid连接池）
+    type: com.alibaba.druid.pool.DruidDataSource
+    # MySQL数据库驱动
+    driverClassName: com.mysql.cj.jdbc.Driver
+    # 数据库连接URL（开发环境使用本地MySQL）
+    # 参数说明：
+    # - useUnicode=true&characterEncoding=utf8: 支持中文字符
+    # - zeroDateTimeBehavior=convertToNull: 零日期转换为null
+    # - useSSL=false: 开发环境关闭SSL（简化配置）
+    # - serverTimezone=GMT%2B8: 设置时区为东八区
+    url: ${SPRING_DATASOURCE_URL:jdbc:mysql://localhost:3306/simple-share?useUnicode=true&characterEncoding=utf8&zeroDateTimeBehavior=convertToNull&useSSL=false&serverTimezone=GMT%2B8}
+    # 数据库用户名（开发环境默认root）
+    username: ${SPRING_DATASOURCE_USERNAME:root}
+    # 数据库密码（开发环境默认root）
+    password: ${SPRING_DATASOURCE_PASSWORD:root}
+    
+    # ============ Druid连接池配置 ============
+    druid:
+      # 从库配置（开发环境暂不启用读写分离）
+      slave:
+        enabled: false    # 是否启用从库
+        url:             # 从库连接URL
+        username:        # 从库用户名
+        password:        # 从库密码
+      
+      # ============ 连接池基础配置 ============
+      # 初始化连接数（应用启动时创建的连接数）
+      initialSize: 5
+      # 最小空闲连接数（连接池中保持的最小连接数）
+      minIdle: 5
+      # 最大活跃连接数（连接池中最多同时存在的连接数）
+      maxActive: 20
+      # 获取连接时最大等待时间（毫秒）
+      maxWait: 60000
+      # 连接超时时间（毫秒）
+      connectTimeout: 30000
+      # Socket超时时间（毫秒）
+      socketTimeout: 60000
+      
+      # ============ 连接池维护配置 ============
+      # 连接回收器运行间隔时间（毫秒）
+      timeBetweenEvictionRunsMillis: 60000
+      # 连接在池中最小生存时间（毫秒）
+      minEvictableIdleTimeMillis: 300000
+      # 连接在池中最大生存时间（毫秒）
+      maxEvictableIdleTimeMillis: 900000
+      # 用于检测连接是否有效的SQL语句
+      validationQuery: SELECT 1
+      # 空闲时检测连接是否有效
+      testWhileIdle: true
+      # 获取连接时检测连接是否有效（影响性能，开发环境关闭）
+      testOnBorrow: false
+      # 归还连接时检测连接是否有效（影响性能，开发环境关闭）
+      testOnReturn: false
+      
+      # ============ Druid监控配置 ============
+      # Web统计过滤器配置
+      webStatFilter:
+        enabled: true     # 启用Web统计过滤器
+      
+      # Druid监控页面配置
+      statViewServlet:
+        enabled: true     # 启用监控页面
+        allow:           # 允许访问的IP地址（空表示允许所有）
+        url-pattern: /druid/*  # 监控页面URL模式
+        login-username: admin  # 监控页面登录用户名
+        login-password: 123456 # 监控页面登录密码
+      
+      # ============ Druid过滤器配置 ============
+      filter:
+        # 统计过滤器配置
+        stat:
+          enabled: true           # 启用统计过滤器
+          log-slow-sql: true      # 记录慢SQL
+          slow-sql-millis: 1000   # 慢SQL阈值（毫秒）
+          merge-sql: true         # 合并相同的SQL
+        # 防火墙过滤器配置
+        wall:
+          config:
+            # 允许执行多条语句（开发环境可以开启，便于调试）
+            multi-statement-allow: true
+  
+  # ============ 邮件服务配置 ============
+  mail:
+    # SMTP服务器地址
+    host: ${MAIL_HOST:smtp.qq.com}
+    # SMTP服务器端口（465为SSL端口）
+    port: ${MAIL_PORT:465}
+    # 发送邮件的邮箱账号
+    username: ${MAIL_USERNAME:990035173@qq.com}
+    # 邮箱授权码（不是邮箱密码，需要在邮箱设置中获取）
+    password: ${MAIL_PASSWORD:xxxxxx}
+    # 邮件协议
+    protocol: smtp
+    # 默认编码
+    default-encoding: UTF-8
+    # 发件人邮箱（与username保持一致）
+    from: ${MAIL_FROM:990035173@qq.com}
+    # 邮件服务器详细配置
+    properties:
+      mail:
+        smtp:
+          # 启用SMTP认证
+          auth: true
+          # STARTTLS配置（QQ邮箱使用SSL，不需要STARTTLS）
+          starttls:
+            enable: false     # 不启用STARTTLS
+            required: false   # 不要求STARTTLS
+          # SSL配置
+          ssl:
+            enable: true      # 启用SSL加密
+            trust: ${MAIL_SSL_TRUST:smtp.qq.com}  # 信任的服务器
+            protocols: TLSv1.2  # SSL协议版本
+          # Socket工厂配置
+          socketFactory:
+            class: javax.net.ssl.SSLSocketFactory  # SSL Socket工厂类
+            port: ${MAIL_SOCKET_PORT:465}          # SSL端口
+            fallback: false                        # 不使用备用端口
+          # 超时配置（毫秒）
+          timeout: ${MAIL_TIMEOUT:10000}                    # 连接超时
+          connectiontimeout: ${MAIL_CONNECTION_TIMEOUT:10000}  # 连接建立超时
+          writetimeout: ${MAIL_WRITE_TIMEOUT:10000}         # 写入超时
+  
+  # ============ Redis缓存配置 ============
+  redis:
+    # Redis服务器地址（开发环境使用本地Redis）
+    host: ${REDIS_HOST:localhost}
+    # Redis服务器端口
+    port: ${REDIS_PORT:6379}
+    # Redis数据库索引（0-15，开发环境使用1号数据库）
+    database: ${REDIS_DATABASE:1}
+    # Redis密码（开发环境通常不设密码）
+    password: ${REDIS_PASSWORD:}
+    # 连接超时时间
+    timeout: 5s
+    # Lettuce连接池配置（Spring Boot 2.x默认使用Lettuce）
+    lettuce:
+      pool:
+        # 最小空闲连接数
+        min-idle: 0
+        # 最大空闲连接数
+        max-idle: 8
+        # 最大活跃连接数
+        max-active: 8
+        # 获取连接最大等待时间（-1表示无限等待）
+        max-wait: -1ms
+
+# ====================================================================
+# Swagger API文档配置 - 开发环境
+# ====================================================================
+swagger:
+  # 开发环境启用Swagger文档
+  enabled: true
+  # API文档路径映射
+  pathMapping: /dev-api
+
+# SpringFox文档配置
+springfox:
+  documentation:
+    # 关闭SpringFox文档（使用Knife4j替代）
+    enabled: false
+
+# ====================================================================
+# MyBatis Plus配置 - 开发环境
+# ====================================================================
+mybatis-plus:
+  configuration:
+    # 开启驼峰命名转换（数据库字段user_name -> 实体属性userName）
+    map-underscore-to-camel-case: true
+    # SQL日志实现（开发环境使用控制台输出，便于查看SQL执行情况）
+    log-impl: ${DEV_MYBATIS_LOG_IMPL:${MYBATIS_LOG_IMPL:org.apache.ibatis.logging.stdout.StdOutImpl}}
+  # 全局配置
+  global-config:
+    db-config:
+      # 主键类型（auto表示数据库自增）
+      id-type: auto

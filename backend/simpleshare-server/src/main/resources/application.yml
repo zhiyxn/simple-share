@@ -1,0 +1,325 @@
+# ====================================================================
+# SimpleShare 项目主配置文件
+# 此文件包含项目的基础配置，适用于所有环境
+# 特定环境的配置请在对应的 application-{profile}.yml 文件中覆盖
+# ====================================================================
+
+# 项目相关配置
+simpleshare:
+  # 项目名称
+  name: ${SIMPLESHARE_SITE_TITLE:简享}
+  # 项目版本号
+  version: 1.0.0
+  # 版权年份
+  copyrightYear: 2025
+  # 实例演示开关（是否启用演示模式，演示模式下可能会限制某些功能）
+  demoEnabled: true
+  # 获取客户端真实IP地址开关（用于日志记录和安全控制）
+  addressEnabled: false
+  # 验证码类型配置
+  # math: 数学计算验证码（如：1+2=?）
+  # char: 字符验证码（如：随机字母数字组合）
+  captchaType: math
+  article:
+    review:
+      # 免审核作者用户名/ID列表，逗号分隔，可通过环境变量覆盖
+      whitelist: ${SIMPLESHARE_REVIEW_WHITELIST:xmgcode}
+  # 租户默认配置
+  tenant-defaults:
+    site-title: ${SIMPLESHARE_SITE_TITLE:${simpleshare.name}}
+    site-description: ${SIMPLESHARE_SITE_DESCRIPTION:一个简洁的内容分享平台}
+    allow-registration: ${SIMPLESHARE_ALLOW_REGISTRATION:true}
+    require-email-verification: ${SIMPLESHARE_REQUIRE_EMAIL_VERIFICATION:false}
+    enable-comments: ${SIMPLESHARE_ENABLE_COMMENTS:true}
+    enable-likes: ${SIMPLESHARE_ENABLE_LIKES:true}
+    enable-sharing: ${SIMPLESHARE_ENABLE_SHARING:true}
+    max-file-size: ${SIMPLESHARE_MAX_FILE_SIZE:10}
+    allowed-file-types: ${SIMPLESHARE_ALLOWED_FILE_TYPES:jpg,jpeg,png,gif,pdf,doc,docx}
+    copy-policy: ${SIMPLESHARE_COPY_POLICY:follow_article}
+    enable-watermark: ${SIMPLESHARE_ENABLE_WATERMARK:true}
+    watermark-text: ${SIMPLESHARE_WATERMARK_TEXT:${SIMPLESHARE_SITE_TITLE:${simpleshare.name}}}
+    watermark-opacity: ${SIMPLESHARE_WATERMARK_OPACITY:0.3}
+    disable-right-click: ${SIMPLESHARE_DISABLE_RIGHT_CLICK:false}
+    disable-text-selection: ${SIMPLESHARE_DISABLE_TEXT_SELECTION:false}
+    disable-dev-tools: ${SIMPLESHARE_DISABLE_DEV_TOOLS:false}
+    theme:
+      primary-color: ${SIMPLESHARE_THEME_PRIMARY_COLOR:#409EFF}
+      secondary-color: ${SIMPLESHARE_THEME_SECONDARY_COLOR:#67C23A}
+      background-color: ${SIMPLESHARE_THEME_BACKGROUND_COLOR:#FFFFFF}
+      text-color: ${SIMPLESHARE_THEME_TEXT_COLOR:#303133}
+
+# ====================================================================
+# 服务器配置
+# ====================================================================
+server:
+  # 服务器HTTP端口，默认8080
+  port: 8081
+  servlet:
+    # 应用访问路径前缀（需要与前端API请求前缀保持一致）
+    context-path: /api
+  tomcat:
+    # Tomcat URI字符编码
+    uri-encoding: UTF-8
+    # 当所有可用请求处理线程被占用时，传入连接请求的最大队列长度
+    accept-count: 1000
+    threads:
+      # Tomcat最大工作线程数（处理并发请求的能力）
+      max: 800
+      # Tomcat启动时创建的最小线程数（预热线程池）
+      min-spare: 100
+
+# ====================================================================
+# 日志配置
+# 支持通过环境变量动态调整日志级别
+# ====================================================================
+logging:
+  level:
+    # 根日志级别（影响所有未明确配置的包）
+    root: ${LOGGING_LEVEL_ROOT:info}
+    # 项目包日志级别（com.simpleshare包下的所有类）
+    com.simpleshare: ${LOGGING_LEVEL_APP:info}
+    # Spring框架日志级别
+    org.springframework: ${LOGGING_LEVEL_SPRING:warn}
+    # Spring Web相关日志级别（HTTP请求响应等）
+    org.springframework.web: ${LOGGING_LEVEL_SPRING_WEB:info}
+    # Spring Boot Web相关日志级别
+    org.springframework.boot.web: ${LOGGING_LEVEL_SPRING_BOOT_WEB:info}
+    # MyBatis框架日志级别（SQL执行日志）
+    org.mybatis: ${LOGGING_LEVEL_MYBATIS:warn}
+
+# ====================================================================
+# Spring框架配置
+# ====================================================================
+spring:
+  # 国际化资源配置
+  messages:
+    # 国际化资源文件路径（支持多语言）
+    basename: i18n/messages
+  profiles:
+    # 默认激活的环境配置文件
+    # 可通过环境变量SPRING_PROFILES_ACTIVE覆盖
+    # dev: 开发环境, prod: 生产环境, test: 测试环境
+#    active: ${SPRING_PROFILES_ACTIVE:prod}
+    active: ${SPRING_PROFILES_ACTIVE:dev}
+  # MVC配置
+  mvc:
+    pathmatch:
+      # 路径匹配策略，解决Swagger与Spring Boot 2.6+版本兼容性问题
+      matching-strategy: ant_path_matcher
+  # 文件上传配置
+  servlet:
+    multipart:
+      # 单个文件最大大小限制
+      max-file-size: 10MB
+      # 单次请求最大文件总大小限制（支持多文件上传）
+      max-request-size: 20MB
+  # 开发工具配置
+  devtools:
+    restart:
+      # 热部署开关（代码修改后自动重启应用）
+      # 生产环境建议关闭以提高性能
+      enabled: true
+
+# ====================================================================
+# JWT Token配置
+# 用于用户身份认证和授权
+# ====================================================================
+token:
+  # Token在HTTP请求头中的字段名
+  header: Authorization
+  # JWT签名密钥（生产环境请使用更复杂的密钥并通过环境变量配置）
+  secret: abcdefuvwxyzABCDEFGHIJxDDXsssKLMNOPQRSTUVWXYZ0123456789
+  # Token过期时间（单位：分钟）
+  expireTime: 480
+  # Refresh Token过期时间（单位：分钟，默认30天）
+  refreshExpireTime: 43200
+  # Refresh Token前缀
+  refreshPrefix: refresh-
+
+# ====================================================================
+# MyBatis Plus ORM框架配置
+# ====================================================================
+mybatis-plus:
+  # 实体类别名包路径（简化XML中的类型引用）
+  typeAliasesPackage: com.simpleshare.common.core.domain.entity,com.simpleshare.system.domain,com.simpleshare.article.domain
+  # Mapper XML文件扫描路径（支持通配符）
+  mapperLocations: classpath*:mapper/**/*Mapper.xml
+  configuration:
+    # SQL日志实现类（可通过环境变量覆盖）
+    # NoLoggingImpl: 不输出SQL日志（生产环境推荐）
+    # StdOutImpl: 控制台输出SQL日志（开发环境推荐）
+    log-impl: ${MYBATIS_LOG_IMPL:org.apache.ibatis.logging.nologging.NoLoggingImpl}
+  # 全局配置文件路径（可选，用于更复杂的MyBatis配置）
+  # configLocation: classpath:mybatis/mybatis-config.xml
+
+# ====================================================================
+# PageHelper分页插件配置
+# ====================================================================
+pagehelper:
+  # 数据库方言（自动识别数据库类型并生成对应的分页SQL）
+  helperDialect: mysql
+  # 支持通过方法参数进行分页
+  supportMethodsArguments: true
+  # 分页参数配置（count=countSql表示分页时自动执行count查询）
+  params: count=countSql
+
+# ====================================================================
+# XSS攻击防护配置
+# ====================================================================
+xss:
+  # XSS过滤器开关
+  enabled: true
+  # 排除不需要XSS过滤的URL路径（多个路径用逗号分隔）
+  excludes: /system/notice
+  # 需要进行XSS过滤的URL模式（支持通配符）
+  urlPatterns: /system/*,/monitor/*,/tool/*
+
+# ====================================================================
+# 操作日志配置
+# 用于配置操作日志拦截器的排除路径
+# ====================================================================
+operation-log:
+  exclude-patterns:
+    - /error
+    - /actuator/**
+    - /swagger-resources/**
+    - /webjars/**
+    - /v3/api-docs/**
+    - /favicon.ico
+    - /assets/**
+
+# ====================================================================
+# 安全配置 - 请求白名单
+# 配置允许匿名访问的API路径，无需登录即可访问
+# ====================================================================
+security:
+  permitAll:
+    # ============ 通用预检请求 ============
+    - "OPTIONS:/**"                   # 支持跨域预检请求
+
+    # ============ 基础认证API ============
+    - "POST:/api/auth/login"          # 用户登录
+    - "POST:/api/auth/register"       # 用户注册
+    - "POST:/api/auth/refresh"        # 刷新Token
+    - "GET:/api/auth/user-info"       # 获取用户信息
+    - "POST:/api/login"               # 登录（兼容路径）
+    - "POST:/api/register"            # 注册（兼容路径）
+    - "POST:/api/refresh"             # 刷新Token（兼容路径）
+    - "GET:/api/user-info"            # 用户信息（兼容路径）
+    
+    # ============ 认证相关API ============
+    - "GET:/auth/captcha"             # 获取验证码
+    - "POST:/auth/login"              # 用户登录
+    - "POST:/auth/register"           # 用户注册
+    - "POST:/auth/refresh"            # 刷新Token
+    - "POST:/auth/forgot-password"    # 忘记密码
+    - "POST:/auth/reset-password"     # 重置密码
+    - "POST:/auth/verify-email"       # 邮箱验证
+    - "POST:/auth/resend-verification" # 重发验证邮件
+    - "GET:/auth/check-username/**"   # 检查用户名是否可用
+    - "GET:/auth/check-email/**"      # 检查邮箱是否可用
+    - "GET:/auth/user-info"           # 获取用户信息
+    
+    # ============ 系统认证API ============
+    - "POST:/system/auth/login"           # 系统登录
+    - "POST:/system/auth/register"        # 系统注册
+    - "POST:/system/auth/refresh"         # 系统Token刷新
+    - "POST:/system/auth/send-email-code" # 发送邮箱验证码
+    - "POST:/system/auth/verify-reset-code" # 验证重置码
+    - "POST:/system/auth/reset-password"  # 重置密码
+    - "GET:/system/auth/user-info"        # 获取系统用户信息
+    - "GET:/stats"                        # 系统统计信息
+    
+    # ============ 公共测试API ============
+    - "GET:/public/test"              # 公共测试接口
+    - "GET:/simple/test"              # 简单测试接口
+    
+    # ============ 公共文章API ============
+    - "GET:/api/articles"             # 获取文章列表
+    - "GET:/api/articles/**"          # 获取文章详情
+    - "GET:/article/articles"         # 文章列表（兼容路径）
+    - "GET:/article/articles/**"      # 文章详情（兼容路径）
+    - "POST:/article/articles/*/view" # 文章浏览量统计
+    - "POST:/article/articles/*/like" # 文章点赞
+    - "DELETE:/article/articles/*/like" # 取消文章点赞
+    - "POST:/article/articles/*/collect" # 收藏文章
+    - "DELETE:/article/articles/*/collect" # 取消收藏文章
+
+    # ============ AiTech 互动页 API ============
+    - "POST:/api/aitech/cards/click"    # 记录 AiTech 卡片点击
+    - "POST:/aitech/cards/click"        # 兼容路径
+    
+    # ============ 兼容性端点 ============
+    - "GET:/article/list"             # 文章列表（兼容接口）
+    - "GET:/article/detail/**"        # 文章详情（兼容接口）
+    - "POST:/article/draft/create"    # 创建草稿（兼容接口）
+    - "PUT:/article/draft/update"     # 更新草稿（兼容接口）
+    
+    # ============ 公共分类API ============
+    - "GET:/api/categories"           # 获取分类列表
+    - "GET:/api/categories/**"        # 获取分类详情
+    - "GET:/api/public/categories"    # 公共分类列表
+    - "GET:/api/public/categories/**" # 公共分类详情
+    - "GET:/public/categories"        # 公开分类列表
+    - "GET:/public/categories/**"     # 公开分类详情
+    - "GET:/article/categories"       # 文章分类列表
+    - "GET:/article/categories/**"    # 文章分类详情
+    
+    # ============ 前台文章接口 ============
+    - "GET:/front/articles"           # 前台文章列表
+    - "GET:/front/articles/**"        # 前台文章详情
+    - "GET:/front/article/**"         # 前台文章信息
+    - "GET:/front/category/**"        # 前台分类信息
+    - "GET:/front/categories"         # 前台分类列表
+    - "GET:/front/categories/tree"    # 前台分类树结构
+    - "GET:/front/categories/withCount" # 带文章数量的分类列表
+    - "GET:/front/categories/path/**" # 分类路径信息
+    - "GET:/front/categories/*"       # 前台分类详情
+    
+    # ============ 租户相关API ============
+    - "GET:/system/public/tenants/current"        # 获取当前租户信息
+    - "GET:/system/public/tenants/current/config" # 获取租户配置
+    - "GET:/system/public/tenants/current/owner"  # 获取站长信息
+    - "GET:/tenants/by-domain"        # 根据域名获取租户信息
+    - "GET:/tenants/check-domain"     # 检查域名是否可用
+    - "GET:/tenants/check-name"       # 检查租户名称是否可用
+    - "GET:/tenants/current/config"   # 获取当前租户配置
+    
+    # ============ 公开租户API ============
+    - "GET:/public/tenants/by-domain"    # 公开获取租户信息
+    - "GET:/public/tenants/current/owner"  # 获取站长信息
+    - "GET:/public/tenants/**/config"    # 公开获取租户配置
+    - "GET:/public/tenants/active"       # 获取活跃租户列表
+    - "GET:/public/tenants/check-domain" # 公开检查域名
+    
+    # ============ 文章管理API ============
+    - "GET:/article/manage/recommend/list" # 推荐文章列表
+    - "GET:/article/manage/hot/list"       # 热门文章列表
+    - "GET:/article/manage/latest/list"    # 最新文章列表
+    - "GET:/article/manage/related/list"   # 相关文章列表
+    - "GET:/article/manage/author/**"      # 作者文章信息
+    - "GET:/article/manage/search"         # 文章搜索
+    - "POST:/article/manage/view/**"       # 文章浏览统计
+    
+    # ============ 测试接口 ============
+    - "GET:/fix/**"                   # 修复相关测试接口
+    - "GET:/fix/test"                 # 修复测试接口
+    - "GET:/test/**"                  # 通用测试接口
+    
+    # ============ 初始化API ============
+    - "GET:/init/**"                  # 系统初始化接口（GET）
+    - "POST:/init/**"                 # 系统初始化接口（POST）
+    
+    # ============ 新增API路径 ============
+    - "GET:/api/new-endpoint"         # 新增端点（GET）
+    - "POST:/api/new-endpoint"        # 新增端点（POST）
+    
+    # ============ Swagger文档相关 ============
+    - /swagger-ui/**                  # Swagger UI界面
+    - /v3/api-docs                    # OpenAPI 3.0文档
+    - /v2/api-docs                    # OpenAPI 2.0文档
+    - /swagger-resources/**           # Swagger资源文件
+    - /webjars/**                     # WebJars静态资源
+    - /doc.html                       # Knife4j文档界面
+    - /favicon.ico                    # 网站图标
+    - /error                          # 错误页面

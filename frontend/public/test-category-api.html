@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>分类API测试</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .test-section {
+            margin: 20px 0;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        .result {
+            background: #f5f5f5;
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 3px;
+            white-space: pre-wrap;
+        }
+        .error {
+            background: #ffebee;
+            color: #c62828;
+        }
+        .success {
+            background: #e8f5e8;
+            color: #2e7d32;
+        }
+        button {
+            background: #1976d2;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover {
+            background: #1565c0;
+        }
+    </style>
+</head>
+<body>
+    <h1>分类API测试</h1>
+    
+    <div class="test-section">
+        <h2>测试 /article/categories API</h2>
+        <button onclick="testCategoriesAPI()">测试分类API</button>
+        <div id="categories-result" class="result"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>测试网络连接</h2>
+        <button onclick="testConnection()">测试后端连接</button>
+        <div id="connection-result" class="result"></div>
+    </div>
+
+    <script>
+        const API_BASE_URL = 'http://localhost:8080/api';
+
+        async function testCategoriesAPI() {
+            const resultDiv = document.getElementById('categories-result');
+            resultDiv.textContent = '正在测试...';
+            resultDiv.className = 'result';
+
+            try {
+                console.log('开始测试分类API...');
+                const response = await fetch(`${API_BASE_URL}/article/categories`, {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    }
+                });
+
+                console.log('响应状态:', response.status);
+                console.log('响应头:', response.headers);
+
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+
+                const data = await response.json();
+                console.log('响应数据:', data);
+
+                resultDiv.className = 'result success';
+                resultDiv.textContent = `✅ 成功获取分类数据!\n\n状态码: ${response.status}\n数据: ${JSON.stringify(data, null, 2)}`;
+            } catch (error) {
+                console.error('分类API测试失败:', error);
+                resultDiv.className = 'result error';
+                resultDiv.textContent = `❌ 分类API测试失败:\n\n错误: ${error.message}\n\n请检查:\n1. 后端服务是否启动 (http://localhost:8080)\n2. API路径是否正确 (/api/article/categories)\n3. 网络连接是否正常`;
+            }
+        }
+
+        async function testConnection() {
+            const resultDiv = document.getElementById('connection-result');
+            resultDiv.textContent = '正在测试连接...';
+            resultDiv.className = 'result';
+
+            try {
+                console.log('开始测试后端连接...');
+                const response = await fetch(`${API_BASE_URL}/health`, {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    }
+                });
+
+                console.log('健康检查响应状态:', response.status);
+
+                if (response.ok) {
+                    const data = await response.text();
+                    resultDiv.className = 'result success';
+                    resultDiv.textContent = `✅ 后端连接正常!\n\n状态码: ${response.status}\n响应: ${data}`;
+                } else {
+                    resultDiv.className = 'result error';
+                    resultDiv.textContent = `⚠️ 后端响应异常:\n\n状态码: ${response.status}\n状态文本: ${response.statusText}`;
+                }
+            } catch (error) {
+                console.error('连接测试失败:', error);
+                resultDiv.className = 'result error';
+                resultDiv.textContent = `❌ 无法连接到后端服务:\n\n错误: ${error.message}\n\n请确保后端服务已启动在 http://localhost:8080`;
+            }
+        }
+
+        // 页面加载时自动测试
+        window.onload = function() {
+            console.log('页面加载完成，开始自动测试...');
+            testConnection();
+            setTimeout(testCategoriesAPI, 1000);
+        };
+    </script>
+</body>
+</html>

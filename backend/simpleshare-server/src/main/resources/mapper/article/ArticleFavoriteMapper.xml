@@ -1,0 +1,128 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.simpleshare.article.mapper.ArticleFavoriteMapper">
+
+    <resultMap id="ArticleFavoriteResult" type="com.simpleshare.article.domain.ArticleFavorite">
+        <id property="id" column="id"/>
+        <result property="tenantId" column="tenant_id"/>
+        <result property="userId" column="user_id"/>
+        <result property="articleId" column="article_id"/>
+        <result property="folderName" column="folder_name"/>
+        <result property="tags" column="tags"/>
+        <result property="notes" column="notes"/>
+        <result property="createBy" column="create_by"/>
+        <result property="createTime" column="create_time"/>
+        <result property="updateBy" column="update_by"/>
+        <result property="updateTime" column="update_time"/>
+    </resultMap>
+
+    <resultMap id="ArticleFavoriteViewResult" type="com.simpleshare.article.dto.ArticleFavoriteView">
+        <id property="id" column="id"/>
+        <result property="tenantId" column="tenant_id"/>
+        <result property="userId" column="user_id"/>
+        <result property="articleId" column="article_id"/>
+        <result property="folderName" column="folder_name"/>
+        <result property="tags" column="tags"/>
+        <result property="notes" column="notes"/>
+        <result property="createTime" column="create_time"/>
+        <result property="updateTime" column="update_time"/>
+        <result property="articleTitle" column="article_title"/>
+        <result property="articleSummary" column="article_summary"/>
+        <result property="articleCover" column="article_cover"/>
+        <result property="articleCategoryId" column="article_category_id"/>
+        <result property="articleCategoryName" column="article_category_name"/>
+        <result property="articleAuthorId" column="article_author_id"/>
+        <result property="articleAuthorName" column="article_author_name"/>
+        <result property="articleAuthorAvatar" column="article_author_avatar"/>
+        <result property="articleStatus" column="article_status"/>
+    </resultMap>
+
+    <select id="selectByUserAndArticle" resultMap="ArticleFavoriteResult">
+        select id,
+               tenant_id,
+               user_id,
+               article_id,
+               folder_name,
+               tags,
+               notes,
+               create_by,
+               create_time,
+               update_by,
+               update_time
+        from article_favorite
+        where user_id = #{userId}
+          and article_id = #{articleId}
+        limit 1
+    </select>
+
+    <delete id="deleteByUserAndArticle">
+        delete from article_favorite
+        where user_id = #{userId}
+          and article_id = #{articleId}
+    </delete>
+
+    <delete id="deleteByIds">
+        delete from article_favorite
+        where user_id = #{userId}
+          and id in
+          <foreach collection="ids" item="id" open="(" separator="," close=")">
+              #{id}
+          </foreach>
+    </delete>
+
+    <select id="selectFavoritePage" resultMap="ArticleFavoriteViewResult">
+        select f.id,
+               f.tenant_id,
+               f.user_id,
+               f.article_id,
+               f.folder_name,
+               f.tags,
+               f.notes,
+               f.create_time,
+               f.update_time,
+               a.title      as article_title,
+               a.summary    as article_summary,
+               a.cover_image as article_cover,
+               a.category_id as article_category_id,
+               c.category_name as article_category_name,
+               a.author_id  as article_author_id,
+               u.nickname   as article_author_name,
+               u.avatar     as article_author_avatar,
+               a.status     as article_status
+        from article_favorite f
+                 join article a on f.article_id = a.id
+                 left join article_category c on a.category_id = c.category_id
+                 left join sys_user u on a.author_id = u.id
+        where f.user_id = #{userId}
+          <if test="keyword != null and keyword != ''">
+              and (
+                      a.title like concat('%', #{keyword}, '%')
+              or ifnull(u.nickname, '') like concat('%', #{keyword}, '%')
+                      or ifnull(a.summary, '') like concat('%', #{keyword}, '%')
+                  )
+          </if>
+          <if test="categoryId != null">
+              and a.category_id = #{categoryId}
+          </if>
+        <choose>
+            <when test="sortBy == 'title'">
+                order by a.title
+            </when>
+            <when test="sortBy == 'author'">
+                order by u.nickname
+            </when>
+            <otherwise>
+                order by f.create_time
+            </otherwise>
+        </choose>
+        <if test="sortOrder != null and (sortOrder == 'asc' or sortOrder == 'ASC')">
+            asc
+        </if>
+        <if test="sortOrder == null or !(sortOrder == 'asc' or sortOrder == 'ASC')">
+            desc
+        </if>
+    </select>
+
+</mapper>

@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.simpleshare.infra.mapper.InfraFileConfigMapper">
+
+    <resultMap type="com.simpleshare.infra.domain.InfraFileConfig" id="InfraFileConfigResult">
+        <result property="id" column="id"/>
+        <result property="name" column="name"/>
+        <result property="storage" column="storage"/>
+        <result property="remark" column="remark"/>
+        <result property="master" column="master"/>
+        <result property="config" column="config"/>
+        <result property="createBy" column="create_by"/>
+        <result property="createTime" column="create_time"/>
+        <result property="updateBy" column="update_by"/>
+        <result property="updateTime" column="update_time"/>
+        <result property="deleted" column="deleted"/>
+    </resultMap>
+
+    <sql id="selectInfraFileConfigVo">
+        select id, name, storage, remark, master, config, create_by, create_time, update_by, update_time, deleted
+        from infra_file_config
+    </sql>
+
+    <select id="selectInfraFileConfigList" parameterType="com.simpleshare.infra.domain.InfraFileConfig" resultMap="InfraFileConfigResult">
+        <include refid="selectInfraFileConfigVo"/>
+        <where>
+            deleted = 0
+            <if test="name != null and name != ''">and name like concat('%', #{name}, '%')</if>
+            <if test="storage != null">and storage = #{storage}</if>
+            <if test="master != null">and master = #{master}</if>
+        </where>
+        order by master desc, create_time desc
+    </select>
+
+    <select id="selectMasterConfig" resultMap="InfraFileConfigResult">
+        <include refid="selectInfraFileConfigVo"/>
+        where master = 1 and deleted = 0
+        limit 1
+    </select>
+
+    <update id="updateMasterStatus">
+        update infra_file_config set master = #{master} where id = #{id} and deleted = 0
+    </update>
+
+    <update id="clearAllMasterStatus">
+        update infra_file_config set master = 0 where deleted = 0
+    </update>
+
+</mapper>

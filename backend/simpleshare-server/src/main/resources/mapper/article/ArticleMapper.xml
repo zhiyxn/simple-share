@@ -1,0 +1,324 @@
+﻿<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.simpleshare.article.mapper.ArticleMapper">
+
+    <resultMap id="ArticleResult" type="com.simpleshare.article.domain.Article">
+        <id     property="articleId"      column="id" />
+        <result property="tenantId"       column="tenant_id" />
+        <result property="title"          column="title" />
+        <result property="summary"        column="summary" />
+        <result property="content"        column="content" />
+        <result property="memberContent"  column="member_content" />
+        <result property="coverImage"     column="cover_image" />
+        <result property="categoryId"     column="category_id" />
+        <result property="authorId"       column="author_id" />
+        <result property="authorName"     column="author_name" />
+        <result property="tags"           column="tags" />
+        <result property="status"         column="status" />
+        <result property="reviewStatus"   column="review_status" />
+        <result property="password"       column="password" />
+        <result property="isPasswd"     column="is_passwd" />
+        <result property="accessLevel"    column="access_level" />
+        <result property="enableTieredRead" column="enable_tiered_read" />
+        <result property="allowCopy"      column="allow_copy" />
+        <result property="previewContent" column="preview_content" />
+        <result property="isTop"          column="is_top" />
+        <result property="isRecommend"    column="is_recommend" />
+        <result property="viewCount"      column="view_count" />
+        <result property="likeCount"      column="like_count" />
+        <result property="collectCount"   column="collect_count" />
+        <result property="commentCount"   column="comment_count" />
+        <result property="orderNum"       column="order_num" />
+        <result property="publishTime"    column="publish_time" />
+        <result property="seoKeywords"    column="seo_keywords" />
+        <result property="seoDescription" column="seo_description" />
+        <result property="enableWatermark" column="enable_watermark" />
+        <result property="createBy"       column="create_by" />
+        <result property="createTime"     column="create_time" />
+        <result property="updateBy"       column="update_by" />
+        <result property="updateTime"     column="update_time" />
+        <result property="remark"         column="remark" />
+    </resultMap>
+
+    <sql id="selectArticleColumns">
+        select id, tenant_id, title, summary, content, member_content, cover_image, category_id, author_id, tags,
+               status, review_status, password, is_passwd, access_level, enable_tiered_read, allow_copy, preview_content, is_top, is_recommend, view_count, like_count,
+               collect_count, comment_count, order_num, publish_time, seo_keywords, seo_description, enable_watermark,
+               create_by, create_time, update_by, update_time, remark, del_flag,
+               (select su.nickname
+                  from sys_user su
+                 where su.id = ifnull(nullif(author_id, 0), create_by)
+                 limit 1) as author_name
+        from article
+    </sql>
+
+    <select id="selectLatestArticleList" resultMap="ArticleResult">
+        <include refid="selectArticleColumns"/>
+        where status = '1' and review_status = '1' and del_flag = '0'
+        order by publish_time desc, id desc
+        <if test="limit != null">
+            limit #{limit}
+        </if>
+    </select>
+
+    <select id="selectRecommendArticleList" resultMap="ArticleResult">
+        <include refid="selectArticleColumns"/>
+        where status = '1' and review_status = '1' and del_flag = '0' and is_recommend = '1'
+        order by order_num asc, publish_time desc, id desc
+        <if test="limit != null">
+            limit #{limit}
+        </if>
+    </select>
+
+    <select id="selectHotArticleList" resultMap="ArticleResult">
+        <include refid="selectArticleColumns"/>
+        where status = '1' and review_status = '1' and del_flag = '0'
+        order by view_count desc, like_count desc, publish_time desc
+        <if test="limit != null">
+            limit #{limit}
+        </if>
+    </select>
+
+    <select id="selectRelatedArticleList" resultMap="ArticleResult">
+        <include refid="selectArticleColumns"/>
+        where status = '1' and review_status = '1' and del_flag = '0'
+          and category_id = #{categoryId}
+          and id != #{articleId}
+        order by publish_time desc, id desc
+        <if test="limit != null">
+            limit #{limit}
+        </if>
+    </select>
+
+    <select id="selectArticleListByAuthorId" parameterType="long" resultMap="ArticleResult">
+        <include refid="selectArticleColumns"/>
+        where status = '1' and review_status = '1' and del_flag = '0' and author_id = #{authorId}
+        order by publish_time desc, id desc
+    </select>
+
+    <select id="selectArticleByArticleId" parameterType="long" resultMap="ArticleResult">
+        <include refid="selectArticleColumns"/>
+        where id = #{articleId} and del_flag = '0'
+    </select>
+
+    <update id="incrementViewCount" parameterType="long">
+        update article set view_count = ifnull(view_count, 0) + 1 where id = #{articleId}
+    </update>
+
+    <update id="incrementLikeCount" parameterType="long">
+        update article set like_count = ifnull(like_count, 0) + 1 where id = #{articleId}
+    </update>
+
+    <update id="decrementLikeCount" parameterType="long">
+        update article set like_count = case when ifnull(like_count, 0) > 0 then like_count - 1 else 0 end where id = #{articleId}
+    </update>
+
+    <update id="incrementCollectCount" parameterType="long">
+        update article set collect_count = ifnull(collect_count, 0) + 1 where id = #{articleId}
+    </update>
+
+    <update id="decrementCollectCount" parameterType="long">
+        update article set collect_count = case when ifnull(collect_count, 0) > 0 then collect_count - 1 else 0 end where id = #{articleId}
+    </update>
+
+    <select id="searchArticles" resultMap="ArticleResult">
+        <include refid="selectArticleColumns"/>
+        where status = '1' and review_status = '1' and del_flag = '0'
+          and (
+            title like concat('%', #{keyword}, '%')
+            or summary like concat('%', #{keyword}, '%')
+            or content like concat('%', #{keyword}, '%')
+          )
+        order by publish_time desc, id desc
+    </select>
+
+    <select id="selectArticleList" parameterType="com.simpleshare.article.domain.Article" resultMap="ArticleResult">
+        <include refid="selectArticleColumns"/>
+        <where>
+            del_flag = '0'
+            <if test="params.keyword != null and params.keyword != ''">
+                and (
+                    title like concat('%', #{params.keyword}, '%')
+                    or summary like concat('%', #{params.keyword}, '%')
+                    or content like concat('%', #{params.keyword}, '%')
+                    or tags like concat('%', #{params.keyword}, '%')
+                )
+            </if>
+            <if test="params.titleExact != null and params.titleExact != ''">
+                and title = #{params.titleExact}
+            </if>
+            <if test="title != null and title != ''">
+                and title like concat('%', #{title}, '%')
+            </if>
+            <if test="categoryId != null">
+                and category_id = #{categoryId}
+            </if>
+            <if test="accessLevel != null">
+                and access_level = #{accessLevel}
+            </if>
+            <if test="authorId != null">
+                and author_id = #{authorId}
+            </if>
+            <if test="createBy != null">
+                and create_by = #{createBy}
+            </if>
+            <if test="status != null and status != ''">
+                and status = #{status}
+            </if>
+            <if test="isTop != null and isTop != ''">
+                and is_top = #{isTop}
+            </if>
+            <if test="isRecommend != null and isRecommend != ''">
+                and is_recommend = #{isRecommend}
+            </if>
+            <if test="reviewStatus != null">
+                and review_status = #{reviewStatus}
+            </if>
+        </where>
+        order by coalesce(publish_time, create_time) desc, create_time desc
+    </select>
+
+    <select id="selectPublishedArticleList" parameterType="com.simpleshare.article.domain.Article" resultMap="ArticleResult">
+        <include refid="selectArticleColumns"/>
+        <where>
+            status = '1' and review_status = '1' and del_flag = '0'
+            <if test="title != null and title != ''">
+                and title like concat('%', #{title}, '%')
+            </if>
+            <if test="categoryId != null">
+                and category_id = #{categoryId}
+            </if>
+            <if test="authorId != null">
+                and author_id = #{authorId}
+            </if>
+        </where>
+        order by publish_time desc, id desc
+    </select>
+
+    <select id="countArticleByCategoryId" parameterType="long" resultType="int">
+        select count(*) from article where category_id = #{categoryId} and del_flag = '0'
+    </select>
+
+    <insert id="insertArticle" parameterType="com.simpleshare.article.domain.Article" useGeneratedKeys="true" keyProperty="articleId">
+        insert into article
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="tenantId != null">tenant_id,</if>
+            <if test="title != null and title != ''">title,</if>
+            <if test="summary != null">summary,</if>
+            <if test="content != null">content,</if>
+            <if test="memberContent != null">member_content,</if>
+            <if test="coverImage != null">cover_image,</if>
+            <if test="categoryId != null">category_id,</if>
+            <if test="authorId != null">author_id,</if>
+            <if test="tags != null">tags,</if>
+            <if test="status != null">status,</if>
+            <if test="reviewStatus != null">review_status,</if>
+            <if test="password != null">password,</if>
+            <if test="isPasswd != null">is_passwd,</if>
+            <if test="accessLevel != null">access_level,</if>
+            <if test="enableTieredRead != null">enable_tiered_read,</if>
+            <if test="allowCopy != null">allow_copy,</if>
+            <if test="previewContent != null">preview_content,</if>
+            <if test="isTop != null">is_top,</if>
+            <if test="isRecommend != null">is_recommend,</if>
+            <if test="viewCount != null">view_count,</if>
+            <if test="likeCount != null">like_count,</if>
+            <if test="collectCount != null">collect_count,</if>
+            <if test="commentCount != null">comment_count,</if>
+            <if test="orderNum != null">order_num,</if>
+            <if test="publishTime != null">publish_time,</if>
+            <if test="seoKeywords != null">seo_keywords,</if>
+            <if test="seoDescription != null">seo_description,</if>
+            <if test="enableWatermark != null">enable_watermark,</if>
+            <if test="createBy != null">create_by,</if>
+            <if test="createTime != null">create_time,</if>
+            <if test="updateBy != null">update_by,</if>
+            <if test="updateTime != null">update_time,</if>
+            <if test="remark != null">remark,</if>
+            del_flag
+        </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="tenantId != null">#{tenantId},</if>
+            <if test="title != null and title != ''">#{title},</if>
+            <if test="summary != null">#{summary},</if>
+            <if test="content != null">#{content},</if>
+            <if test="memberContent != null">#{memberContent},</if>
+            <if test="coverImage != null">#{coverImage},</if>
+            <if test="categoryId != null">#{categoryId},</if>
+            <if test="authorId != null">#{authorId},</if>
+            <if test="tags != null">#{tags},</if>
+            <if test="status != null">#{status},</if>
+            <if test="reviewStatus != null">#{reviewStatus},</if>
+            <if test="password != null">#{password},</if>
+            <if test="isPasswd != null">#{isPasswd},</if>
+            <if test="accessLevel != null">#{accessLevel},</if>
+            <if test="enableTieredRead != null">#{enableTieredRead},</if>
+            <if test="allowCopy != null">#{allowCopy},</if>
+            <if test="previewContent != null">#{previewContent},</if>
+            <if test="isTop != null">#{isTop},</if>
+            <if test="isRecommend != null">#{isRecommend},</if>
+            <if test="viewCount != null">#{viewCount},</if>
+            <if test="likeCount != null">#{likeCount},</if>
+            <if test="collectCount != null">#{collectCount},</if>
+            <if test="commentCount != null">#{commentCount},</if>
+            <if test="orderNum != null">#{orderNum},</if>
+            <if test="publishTime != null">#{publishTime},</if>
+            <if test="seoKeywords != null">#{seoKeywords},</if>
+            <if test="seoDescription != null">#{seoDescription},</if>
+            <if test="enableWatermark != null">#{enableWatermark},</if>
+            <if test="createBy != null">#{createBy},</if>
+            <if test="createTime != null">#{createTime},</if>
+            <if test="updateBy != null">#{updateBy},</if>
+            <if test="updateTime != null">#{updateTime},</if>
+            <if test="remark != null">#{remark},</if>
+            '0'
+        </trim>
+    </insert>
+
+    <update id="updateArticle" parameterType="com.simpleshare.article.domain.Article">
+        update article
+        <trim prefix="SET" suffixOverrides=",">
+            <if test="title != null and title != ''">title = #{title},</if>
+            <if test="summary != null">summary = #{summary},</if>
+            <if test="content != null">content = #{content},</if>
+            <if test="memberContent != null">member_content = #{memberContent},</if>
+            <if test="coverImage != null">cover_image = #{coverImage},</if>
+            <if test="categoryId != null">category_id = #{categoryId},</if>
+            <if test="tags != null">tags = #{tags},</if>
+            <if test="status != null">status = #{status},</if>
+            <if test="reviewStatus != null">review_status = #{reviewStatus},</if>
+            <if test="password != null">password = #{password},</if>
+            <if test="isPasswd != null">is_passwd = #{isPasswd},</if>
+            <if test="clearPassword != null and clearPassword">password = null,</if>
+            <if test="accessLevel != null">access_level = #{accessLevel},</if>
+            <if test="enableTieredRead != null">enable_tiered_read = #{enableTieredRead},</if>
+            <if test="allowCopy != null">allow_copy = #{allowCopy},</if>
+            <if test="previewContent != null">preview_content = #{previewContent},</if>
+            <if test="isTop != null">is_top = #{isTop},</if>
+            <if test="isRecommend != null">is_recommend = #{isRecommend},</if>
+            <if test="orderNum != null">order_num = #{orderNum},</if>
+            <if test="publishTime != null">publish_time = #{publishTime},</if>
+            <if test="seoKeywords != null">seo_keywords = #{seoKeywords},</if>
+            <if test="seoDescription != null">seo_description = #{seoDescription},</if>
+            <if test="enableWatermark != null">enable_watermark = #{enableWatermark},</if>
+            <if test="updateBy != null">update_by = #{updateBy},</if>
+            <if test="updateTime != null">update_time = #{updateTime},</if>
+            <if test="remark != null">remark = #{remark},</if>
+        </trim>
+        where id = #{articleId}
+    </update>
+
+    <delete id="deleteArticleByArticleId" parameterType="long">
+        update article set del_flag = '1' where id = #{articleId}
+    </delete>
+
+    <delete id="deleteArticleByArticleIds" parameterType="long">
+        update article set del_flag = '1' where id in
+        <foreach item="articleId" collection="array" open="(" separator="," close=")">
+            #{articleId}
+        </foreach>
+    </delete>
+
+</mapper>

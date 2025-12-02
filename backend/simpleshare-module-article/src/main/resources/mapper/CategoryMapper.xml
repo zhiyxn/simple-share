@@ -1,0 +1,217 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.simpleshare.article.mapper.CategoryMapper">
+
+    <resultMap type="com.simpleshare.article.domain.Category" id="CategoryResult">
+        <id     property="categoryId"       column="category_id"      />
+        <result property="parentId"         column="parent_id"        />
+        <result property="ancestors"        column="ancestors"        />
+        <result property="categoryName"     column="category_name"    />
+        <result property="categoryPath"     column="category_path"    />
+        <result property="orderNum"         column="order_num"        />
+        <result property="icon"             column="icon"             />
+        <result property="description"      column="description"      />
+        <result property="status"           column="status"           />
+        <result property="delFlag"          column="del_flag"         />
+        <result property="createBy"         column="create_by"        />
+        <result property="createTime"       column="create_time"      />
+        <result property="updateBy"         column="update_by"        />
+        <result property="updateTime"       column="update_time"      />
+    </resultMap>
+
+    <sql id="selectCategoryVo">
+        select category_id, parent_id, ancestors, category_name, category_path, order_num, icon, description, status, del_flag, create_by, create_time, update_by, update_time from article_category
+    </sql>
+
+    <select id="selectCategoryList" parameterType="com.simpleshare.article.domain.Category" resultMap="CategoryResult">
+        <include refid="selectCategoryVo"/>
+        <where>
+            <if test="categoryName != null and categoryName != ''">
+                AND category_name like concat('%', #{categoryName}, '%')
+            </if>
+            <if test="parentId != null">
+                AND parent_id = #{parentId}
+            </if>
+            <if test="status != null and status != ''">
+                AND status = #{status}
+            </if>
+        </where>
+        order by order_num, category_id
+    </select>
+
+    <select id="selectCategoryByCategoryId" parameterType="Long" resultMap="CategoryResult">
+        <include refid="selectCategoryVo"/>
+        where category_id = #{categoryId}
+    </select>
+
+    <select id="selectFrontCategoryList" resultMap="CategoryResult">
+        <include refid="selectCategoryVo"/>
+        where status = '0' and del_flag = '0'
+        order by order_num, category_id
+    </select>
+
+    <select id="selectNormalCategoryList" resultMap="CategoryResult">
+        <include refid="selectCategoryVo"/>
+        where status = '0' and del_flag = '0'
+        order by order_num, category_id
+    </select>
+
+    <select id="selectCategoryTreeList" parameterType="com.simpleshare.article.domain.Category" resultMap="CategoryResult">
+        <include refid="selectCategoryVo"/>
+        <where>
+            <if test="categoryName != null and categoryName != ''">
+                AND category_name like concat('%', #{categoryName}, '%')
+            </if>
+            <if test="status != null and status != ''">
+                AND status = #{status}
+            </if>
+            AND del_flag = '0'
+        </where>
+        order by order_num, category_id
+    </select>
+
+    <select id="selectCategoryWithArticleCount" resultMap="CategoryResult">
+        select c.category_id, c.parent_id, c.ancestors, c.category_name, c.category_path, c.order_num, c.icon, c.description, c.status, c.del_flag, c.create_by, c.create_time, c.update_by, c.update_time,
+               (select count(*) from article a where a.category_id = c.category_id and a.status = '1' and a.del_flag = '0') as articleCount
+        from article_category c
+        where c.status = '0' and c.del_flag = '0'
+        order by c.order_num, c.category_id
+    </select>
+
+    <select id="selectChildrenCategoryIds" parameterType="Long" resultType="Long">
+        select category_id from article_category where find_in_set(#{categoryId}, ancestors)
+    </select>
+
+    <select id="selectChildrenIdsByParentId" parameterType="Long" resultType="Long">
+        select category_id from article_category where parent_id = #{parentId}
+    </select>
+
+    <select id="selectCategoryByPath" parameterType="String" resultMap="CategoryResult">
+        <include refid="selectCategoryVo"/>
+        where category_path = #{categoryPath} and status = '0' and del_flag = '0'
+    </select>
+
+    <select id="selectCategoryByAncestors" parameterType="String" resultMap="CategoryResult">
+        <include refid="selectCategoryVo"/>
+        where find_in_set(#{ancestors}, ancestors) and status = '0' and del_flag = '0'
+        order by order_num, category_id
+    </select>
+
+    <select id="hasChildByParentId" parameterType="Long" resultType="int">
+        select count(1) from article_category where parent_id = #{categoryId} and del_flag = '0' limit 1
+    </select>
+
+    <select id="checkCategoryExistArticle" parameterType="Long" resultType="int">
+        select count(1) from article where category_id = #{categoryId} and del_flag = '0' limit 1
+    </select>
+
+    <!-- 使用 param1/param2 兼容缺失 @Param 元数据的情况 -->
+    <select id="checkCategoryNameUnique" resultMap="CategoryResult">
+        <include refid="selectCategoryVo"/>
+        <!-- 兼容运行时未读取到 @Param 注解的情形，使用 param1/param2 -->
+        where category_name = #{param1} and parent_id = #{param2} and del_flag = '0' limit 1
+    </select>
+
+    <select id="selectChildrenCategoryById" parameterType="Long" resultType="int">
+        select count(1) from article_category where parent_id = #{parentId} and del_flag = '0'
+    </select>
+
+    <select id="selectHotCategoryList" parameterType="Integer" resultMap="CategoryResult">
+        <include refid="selectCategoryVo"/>
+        where status = '0' and del_flag = '0'
+        order by order_num, category_id
+        limit #{limit}
+    </select>
+
+    <select id="selectCategoryListByParentId" parameterType="Long" resultMap="CategoryResult">
+        <include refid="selectCategoryVo"/>
+        where parent_id = #{parentId} and status = '0' and del_flag = '0'
+        order by order_num, category_id
+    </select>
+
+    <select id="selectCategoryListWithArticleCount" resultMap="CategoryResult">
+        select c.category_id, c.parent_id, c.ancestors, c.category_name, c.category_path, c.order_num, c.icon, c.description, c.status, c.del_flag, c.create_by, c.create_time, c.update_by, c.update_time,
+               (select count(*) from article a where a.category_id = c.category_id and a.status = '1' and a.del_flag = '0') as articleCount
+        from article_category c
+        where c.status = '0' and c.del_flag = '0'
+        order by c.order_num, c.category_id
+    </select>
+
+    <select id="searchCategories" parameterType="String" resultMap="CategoryResult">
+        <include refid="selectCategoryVo"/>
+        where category_name like concat('%', #{keyword}, '%') and status = '0' and del_flag = '0'
+        order by order_num, category_id
+    </select>
+
+    <insert id="insertCategory" parameterType="com.simpleshare.article.domain.Category" useGeneratedKeys="true" keyProperty="categoryId">
+        insert into article_category
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="parentId != null">parent_id,</if>
+            <if test="ancestors != null">ancestors,</if>
+            <if test="categoryName != null">category_name,</if>
+            <if test="categoryPath != null">category_path,</if>
+            <if test="orderNum != null">order_num,</if>
+            <if test="icon != null">icon,</if>
+            <if test="description != null">description,</if>
+            <if test="status != null">status,</if>
+            <if test="createBy != null">create_by,</if>
+            create_time
+        </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="parentId != null">#{parentId},</if>
+            <if test="ancestors != null">#{ancestors},</if>
+            <if test="categoryName != null">#{categoryName},</if>
+            <if test="categoryPath != null">#{categoryPath},</if>
+            <if test="orderNum != null">#{orderNum},</if>
+            <if test="icon != null">#{icon},</if>
+            <if test="description != null">#{description},</if>
+            <if test="status != null">#{status},</if>
+            <if test="createBy != null">#{createBy},</if>
+            sysdate()
+        </trim>
+    </insert>
+
+    <update id="updateCategory" parameterType="com.simpleshare.article.domain.Category">
+        update article_category
+        <trim prefix="SET" suffixOverrides=",">
+            <if test="parentId != null">parent_id = #{parentId},</if>
+            <if test="ancestors != null">ancestors = #{ancestors},</if>
+            <if test="categoryName != null">category_name = #{categoryName},</if>
+            <if test="categoryPath != null">category_path = #{categoryPath},</if>
+            <if test="orderNum != null">order_num = #{orderNum},</if>
+            <if test="icon != null">icon = #{icon},</if>
+            <if test="description != null">description = #{description},</if>
+            <if test="status != null">status = #{status},</if>
+            <if test="updateBy != null">update_by = #{updateBy},</if>
+            update_time = sysdate()
+        </trim>
+        where category_id = #{categoryId}
+    </update>
+
+    <update id="updateCategoryChildren" parameterType="java.util.List">
+        update article_category set ancestors =
+        <foreach collection="categories" item="item" index="index"
+            separator=" " open="case category_id" close="end">
+            when #{item.categoryId} then #{item.ancestors}
+        </foreach>
+        where category_id in
+        <foreach collection="categories" item="item" index="index"
+            separator="," open="(" close=")">
+            #{item.categoryId}
+        </foreach>
+    </update>
+
+    <delete id="deleteCategoryByCategoryId" parameterType="Long">
+        update article_category set del_flag = '2' where category_id = #{categoryId}
+    </delete>
+
+    <delete id="deleteCategoryByCategoryIds" parameterType="String">
+        update article_category set del_flag = '2' where category_id in
+        <foreach item="categoryId" collection="array" open="(" separator="," close=")">
+            #{categoryId}
+        </foreach>
+    </delete>
+
+</mapper>

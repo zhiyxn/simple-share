@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>API白名单测试页面</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #333;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .test-section {
+            margin: 20px 0;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            background-color: #fafafa;
+        }
+        .test-section h3 {
+            color: #555;
+            margin-top: 0;
+        }
+        button {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px;
+            font-size: 14px;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        button:disabled {
+            background-color: #ccc;
+            cursor: not-allowed;
+        }
+        .result {
+            margin-top: 15px;
+            padding: 15px;
+            border-radius: 5px;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            white-space: pre-wrap;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+        .success {
+            background-color: #d4edda;
+            border: 1px solid #c3e6cb;
+            color: #155724;
+        }
+        .error {
+            background-color: #f8d7da;
+            border: 1px solid #f5c6cb;
+            color: #721c24;
+        }
+        .info {
+            background-color: #d1ecf1;
+            border: 1px solid #bee5eb;
+            color: #0c5460;
+        }
+        .loading {
+            background-color: #fff3cd;
+            border: 1px solid #ffeaa7;
+            color: #856404;
+        }
+        .config-info {
+            background-color: #e9ecef;
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+            font-size: 14px;
+        }
+        .status-indicator {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            margin-right: 8px;
+        }
+        .status-success { background-color: #28a745; }
+        .status-error { background-color: #dc3545; }
+        .status-loading { background-color: #ffc107; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🧪 API白名单测试工具</h1>
+        
+        <div class="config-info">
+            <strong>配置信息：</strong><br>
+            • API基础路径: <span id="apiBase">检测中...</span><br>
+            • 当前环境: <span id="environment">开发环境</span><br>
+            • 测试时间: <span id="testTime"></span>
+        </div>
+
+        <div class="test-section">
+            <h3>🔓 白名单测试（无需认证）</h3>
+            <p>这些接口应该在白名单中，可以匿名访问：</p>
+            <button onclick="testEndpoint('GET', '/api/fix/test')">测试 GET /api/fix/test</button>
+            <button onclick="testEndpoint('GET', '/api/fix/articles')">测试 GET /api/fix/articles</button>
+            <button onclick="testEndpoint('GET', '/api/fix/categories')">测试 GET /api/fix/categories</button>
+            <button onclick="testEndpoint('POST', '/api/fix/test', {test: 'data'})">测试 POST /api/fix/test</button>
+            <div id="whitelist-result" class="result" style="display: none;"></div>
+        </div>
+
+        <div class="test-section">
+            <h3>🔒 认证测试（需要登录）</h3>
+            <p>这些接口需要认证才能访问：</p>
+            <button onclick="testEndpoint('GET', '/api/fix/auth-test')">测试 GET /api/fix/auth-test</button>
+            <button onclick="testEndpoint('GET', '/api/system/user/list')">测试 GET /api/system/user/list</button>
+            <div id="auth-result" class="result" style="display: none;"></div>
+        </div>
+
+        <div class="test-section">
+            <h3>🌐 跨域测试</h3>
+            <p>测试不同路径的跨域访问：</p>
+            <button onclick="testEndpoint('GET', '/dev-api/fix/test')">测试 GET /dev-api/fix/test</button>
+            <button onclick="testEndpoint('GET', '/api/fix/test')">测试 GET /api/fix/test</button>
+            <div id="cors-result" class="result" style="display: none;"></div>
+        </div>
+
+        <div class="test-section">
+            <h3>🔄 批量测试</h3>
+            <p>批量测试多个接口：</p>
+            <button onclick="runBatchTests()">运行批量测试</button>
+            <button onclick="clearResults()">清除结果</button>
+            <div id="batch-result" class="result" style="display: none;"></div>
+        </div>
+    </div>
+
+    <script>
+        // 获取API基础路径
+        function getApiBase() {
+            // 检测当前环境
+            const hostname = window.location.hostname;
+            if (hostname === 'localhost' || hostname === '127.0.0.1') {
+                return '/api'; // 开发环境使用代理
+            } else {
+                return '/api'; // 生产环境
+            }
+        }
+
+        // 更新配置信息
+        function updateConfigInfo() {
+            document.getElementById('apiBase').textContent = getApiBase();
+            document.getElementById('testTime').textContent = new Date().toLocaleString('zh-CN');
+        }
+
+        // 显示结果
+        function showResult(elementId, data, status) {
+            const element = document.getElementById(elementId);
+            element.style.display = 'block';
+            element.className = `result ${status}`;
+            element.textContent = typeof data === 'string' ? data : JSON.stringify(data, null, 2);
+        }
+
+        // 测试接口
+        async function testEndpoint(method, path, bodyData = null) {
+            const resultId = method === 'GET' && path.includes('fix') ? 'whitelist-result' : 
+                           method === 'GET' && path.includes('auth') ? 'auth-result' : 'cors-result';
+            
+            showResult(resultId, `🔄 正在测试 ${method} ${path}...`, 'loading');
+            
+            try {
+                const url = getApiBase() + path;
+                const options = {
+                    method: method,
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    credentials: 'include' // 包含cookies
+                };
+
+                if (bodyData && method === 'POST') {
+                    options.body = JSON.stringify(bodyData);
+                }
+
+                const response = await fetch(url, options);
+                const responseData = await response.text();
+                
+                let resultData;
+                try {
+                    resultData = JSON.parse(responseData);
+                } catch (e) {
+                    resultData = responseData;
+                }
+
+                const result = {
+                    url: url,
+                    method: method,
+                    status: response.status,
+                    statusText: response.statusText,
+                    headers: Object.fromEntries(response.headers.entries()),
+                    data: resultData
+                };
+
+                if (response.ok) {
+                    showResult(resultId, result, 'success');
+                } else {
+                    showResult(resultId, result, 'error');
+                }
+
+            } catch (error) {
+                showResult(resultId, {
+                    error: error.message,
+                    url: getApiBase() + path,
+                    method: method,
+                    timestamp: new Date().toISOString()
+                }, 'error');
+            }
+        }
+
+        // 批量测试
+        async function runBatchTests() {
+            showResult('batch-result', '🔄 正在运行批量测试...', 'loading');
+            
+            const tests = [
+                { method: 'GET', path: '/api/fix/test', expected: 200 },
+                { method: 'GET', path: '/api/fix/articles', expected: 200 },
+                { method: 'GET', path: '/api/fix/categories', expected: 200 },
+                { method: 'POST', path: '/api/fix/test', body: {test: 'data'}, expected: 200 },
+                { method: 'GET', path: '/api/fix/auth-test', expected: 401 }, // 应该需要认证
+                { method: 'GET', path: '/dev-api/fix/test', expected: 200 },
+            ];
+
+            const results = [];
+            
+            for (const test of tests) {
+                try {
+                    const url = getApiBase() + test.path;
+                    const options = {
+                        method: test.method,
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        credentials: 'include'
+                    };
+
+                    if (test.body) {
+                        options.body = JSON.stringify(test.body);
+                    }
+
+                    const response = await fetch(url, options);
+                    const passed = response.status === test.expected;
+                    
+                    results.push({
+                        test: `${test.method} ${test.path}`,
+                        expected: test.expected,
+                        actual: response.status,
+                        passed: passed,
+                        status: response.statusText
+                    });
+                    
+                } catch (error) {
+                    results.push({
+                        test: `${test.method} ${test.path}`,
+                        error: error.message,
+                        passed: false
+                    });
+                }
+            }
+
+            const passedCount = results.filter(r => r.passed).length;
+            const totalCount = results.length;
+            
+            showResult('batch-result', {
+                summary: `测试结果: ${passedCount}/${totalCount} 通过`,
+                details: results,
+                timestamp: new Date().toISOString()
+            }, passedCount === totalCount ? 'success' : 'error');
+        }
+
+        // 清除结果
+        function clearResults() {
+            const resultElements = document.querySelectorAll('.result');
+            resultElements.forEach(element => {
+                element.style.display = 'none';
+                element.textContent = '';
+            });
+        }
+
+        // 页面加载完成后更新配置信息
+        document.addEventListener('DOMContentLoaded', function() {
+            updateConfigInfo();
+        });
+    </script>
+</body>
+</html>

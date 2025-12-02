@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>API测试</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .test-section {
+            margin-bottom: 30px;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        .test-section h3 {
+            margin-top: 0;
+            color: #333;
+        }
+        button {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-right: 10px;
+        }
+        button:hover {
+            background: #0056b3;
+        }
+        .result {
+            margin-top: 15px;
+            padding: 10px;
+            background: #f8f9fa;
+            border-radius: 4px;
+            white-space: pre-wrap;
+            font-family: monospace;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        .error {
+            background: #f8d7da;
+            color: #721c24;
+        }
+        .success {
+            background: #d4edda;
+            color: #155724;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>API测试页面</h1>
+        
+        <div class="test-section">
+            <h3>测试文章API</h3>
+            <button onclick="testArticlesAPI()">测试 /article/api/articles</button>
+            <button onclick="testCategoriesAPI()">测试 /article/api/categories/tree</button>
+            <div id="apiResult" class="result"></div>
+        </div>
+    </div>
+
+    <script>
+        async function testArticlesAPI() {
+            const resultDiv = document.getElementById('apiResult');
+            resultDiv.textContent = '正在请求...';
+            resultDiv.className = 'result';
+            
+            try {
+                const response = await fetch('/article/api/articles?page=1&size=20');
+                const data = await response.json();
+                
+                if (response.ok) {
+                    resultDiv.textContent = `成功！状态码: ${response.status}\n\n响应数据:\n${JSON.stringify(data, null, 2)}`;
+                    resultDiv.className = 'result success';
+                } else {
+                    resultDiv.textContent = `错误！状态码: ${response.status}\n\n响应数据:\n${JSON.stringify(data, null, 2)}`;
+                    resultDiv.className = 'result error';
+                }
+            } catch (error) {
+                resultDiv.textContent = `网络错误: ${error.message}`;
+                resultDiv.className = 'result error';
+            }
+        }
+        
+        async function testCategoriesAPI() {
+            const resultDiv = document.getElementById('apiResult');
+            resultDiv.textContent = '正在请求...';
+            resultDiv.className = 'result';
+            
+            try {
+                const response = await fetch('/article/api/categories/tree');
+                const data = await response.json();
+                
+                if (response.ok) {
+                    resultDiv.textContent = `成功！状态码: ${response.status}\n\n响应数据:\n${JSON.stringify(data, null, 2)}`;
+                    resultDiv.className = 'result success';
+                } else {
+                    resultDiv.textContent = `错误！状态码: ${response.status}\n\n响应数据:\n${JSON.stringify(data, null, 2)}`;
+                    resultDiv.className = 'result error';
+                }
+            } catch (error) {
+                resultDiv.textContent = `网络错误: ${error.message}`;
+                resultDiv.className = 'result error';
+            }
+        }
+    </script>
+</body>
+</html>

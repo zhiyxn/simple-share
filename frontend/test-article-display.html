@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>文章显示测试</title>
+    <link rel="stylesheet" href="https://unpkg.com/element-plus/dist/index.css">
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+    <script src="https://unpkg.com/element-plus/dist/index.full.js"></script>
+    <style>
+        .recommend-tag {
+            background: linear-gradient(135deg, #ff6b6b, #ee5a24);
+            color: white;
+            border: none;
+        }
+        .access-level-tag {
+            background: linear-gradient(135deg, #4834d4, #686de0);
+            color: white;
+            border: none;
+        }
+        .article-card {
+            margin: 10px;
+            padding: 20px;
+            border: 1px solid #eee;
+            border-radius: 8px;
+        }
+    </style>
+</head>
+<body>
+    <div id="app">
+        <div style="padding: 20px;">
+            <h2>文章显示测试</h2>
+            <div v-for="article in testArticles" :key="article.id" class="article-card">
+                <h3>{{ article.title }}</h3>
+                <div style="margin: 10px 0;">
+                    <el-tag v-if="article.isRecommend === 1" class="recommend-tag" size="small">
+                        推荐
+                    </el-tag>
+                    <el-tag class="access-level-tag" size="small" style="margin-left: 8px;">
+                        {{ getAccessLevelText(article.accessLevel) }}
+                    </el-tag>
+                </div>
+                <p>{{ article.summary }}</p>
+                <div style="color: #666; font-size: 12px;">
+                    创建时间: {{ article.createTime }}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const { createApp } = Vue;
+        const { ElTag } = ElementPlus;
+
+        createApp({
+            components: {
+                ElTag
+            },
+            data() {
+                return {
+                    testArticles: [
+                        {
+                            id: 1,
+                            title: "推荐文章 - 会员级别",
+                            summary: "这是一篇推荐的会员级别文章",
+                            isRecommend: 1,
+                            accessLevel: 1,
+                            createTime: "2025-01-27 10:00:00"
+                        },
+                        {
+                            id: 2,
+                            title: "推荐文章 - VIP级别",
+                            summary: "这是一篇推荐的VIP级别文章",
+                            isRecommend: 1,
+                            accessLevel: 2,
+                            createTime: "2025-01-27 11:00:00"
+                        },
+                        {
+                            id: 3,
+                            title: "普通文章 - 公开级别",
+                            summary: "这是一篇普通的公开文章",
+                            isRecommend: 0,
+                            accessLevel: 0,
+                            createTime: "2025-01-27 12:00:00"
+                        },
+                        {
+                            id: 4,
+                            title: "推荐文章 - 管理员级别",
+                            summary: "这是一篇推荐的管理员级别文章",
+                            isRecommend: 1,
+                            accessLevel: 3,
+                            createTime: "2025-01-27 13:00:00"
+                        }
+                    ]
+                };
+            },
+            methods: {
+                getAccessLevelText(level) {
+                    const levelMap = {
+                        0: '公开',
+                        1: '会员',
+                        2: 'VIP',
+                        3: '管理员'
+                    };
+                    return levelMap[level] || '未知';
+                }
+            }
+        }).use(ElementPlus).mount('#app');
+    </script>
+</body>
+</html>

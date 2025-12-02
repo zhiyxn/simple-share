@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE configuration
+        PUBLIC "-//mybatis.org//DTD Config 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-config.dtd">
+<configuration>
+    <settings>
+        <!-- 使用jdbc的getGeneratedKeys获取数据库自增主键值 -->
+        <setting name="useGeneratedKeys" value="true" />
+        <!-- 使用列别名替换列名 默认:true -->
+        <setting name="useColumnLabel" value="true" />
+        <!-- 开启驼峰命名转换 -->
+        <setting name="mapUnderscoreToCamelCase" value="true" />
+        <!-- 二级缓存开关 -->
+        <setting name="cacheEnabled" value="false" />
+        <!-- 延迟加载开关 -->
+        <setting name="lazyLoadingEnabled" value="false" />
+        <!-- 按需加载属性 -->
+        <setting name="aggressiveLazyLoading" value="false" />
+        <!-- 多结果集开关 -->
+        <setting name="multipleResultSetsEnabled" value="true" />
+        <!-- 自动映射开关 -->
+        <setting name="autoMappingBehavior" value="FULL" />
+        <!-- 自动映射未知列行为 -->
+        <setting name="autoMappingUnknownColumnBehavior" value="WARNING" />
+        <!-- 执行器类型 -->
+        <setting name="defaultExecutorType" value="SIMPLE" />
+        <!-- 超时时间 -->
+        <setting name="defaultStatementTimeout" value="25" />
+        <!-- 默认获取数量 -->
+        <setting name="defaultFetchSize" value="100" />
+        <!-- 允许在嵌套语句中使用分页 -->
+        <setting name="safeRowBoundsEnabled" value="false" />
+        <!-- 本地缓存机制 -->
+        <setting name="localCacheScope" value="SESSION" />
+        <!-- 默认枚举处理器 -->
+        <setting name="defaultEnumTypeHandler" value="org.apache.ibatis.type.EnumTypeHandler" />
+        <!-- 指定 MyBatis 应如何自动映射列到字段或属性 -->
+        <setting name="callSettersOnNulls" value="false" />
+        <!-- 指定当结果集中值为 null 的时候是否调用映射对象的 setter（map 对象时为 put）方法 -->
+        <setting name="returnInstanceForEmptyRow" value="false" />
+        <!-- 日志名称 -->
+        <setting name="logPrefix" value="dao." />
+        <!-- 指定 MyBatis 增加到日志名称的前缀 -->
+        <setting name="logImpl" value="SLF4J" />
+        <!-- 指定 MyBatis 所用日志的具体实现 -->
+        <setting name="proxyFactory" value="JAVASSIST" />
+        <!-- 指定代理工具 -->
+        <setting name="vfsImpl" value="" />
+        <!-- 指定VFS的实现 -->
+        <setting name="useActualParamName" value="true" />
+        <!-- 允许使用方法签名中的名称作为语句参数名称 -->
+        <setting name="configurationFactory" value="" />
+        <!-- 指定一个提供Configuration实例的类 -->
+    </settings>
+</configuration>
