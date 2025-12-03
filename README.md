@@ -135,6 +135,29 @@ simple-share/
 
 ## 🚀 快速开始
 
+
+### 用户一键部署命令 (Deploy)
+
+### Windows PowerShell 用户:
+```
+docker run -d `
+  -p 8081:8080 `
+  --restart always `
+  -v ${PWD}/data/:/app/data/ `
+  --name simpleshare `
+  crpi-ntajolllzuc7nubz.cn-hangzhou.personal.cr.aliyuncs.com/mkblog/simpleshare:latest
+```
+
+### Linux / Mac 用户:
+```
+docker run -d \
+  -p 8080:8080 \
+  --restart always \
+  -v $(pwd)/data/:/app/data/ \
+  --name simpleshare \
+  crpi-ntajolllzuc7nubz.cn-hangzhou.personal.cr.aliyuncs.com/mkblog/simpleshare:latest
+```
+
 ### 环境要求
 - **Node.js**：^20.19.0 || >=22.12.0
 - **Java**：JDK 8+
@@ -358,3 +381,12 @@ http://localhost:8080/doc.html
 
 ---
 
+
+## 📞 联系方式
+
+### 交流群汇总：
+**微信号：xmgcode、xmgcode88**
+
+| xmgcode | xmgcode88 | QQ群 |
+| :---: | :---: | :---: |
+| <img src="https://github.com/xmgcode88/simple-share/blob/main/images/xmgcode.png" width="200" title="微信1：xmgocde"> | <img src="https://github.com/xmgcode88/simple-share/blob/main/images/xmgcode88.png" width="200" title="微信2：xmgocde88"> | <img src="https://github.com/xmgcode88/simple-share/blob/main/images/990035173.png" width="200" title="QQ群二维码"> |
